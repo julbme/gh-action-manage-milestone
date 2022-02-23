@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ManageMilestoneGitHubAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Julb.me :: GitHub action to manage milestones</a> &gt; <a href="index.source.html" class="el_package">me.julb.applications.github.actions</a> &gt; <span class="el_source">ManageMilestoneGitHubAction.java</span></div><h1>ManageMilestoneGitHubAction.java</h1><pre class="source lang-java linenums">/**
+ * MIT License
+ *
+ * Copyright (c) 2017-2022 Julb
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the &quot;Software&quot;), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package me.julb.applications.github.actions;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
+import java.util.Date;
+import java.util.Optional;
+import java.util.concurrent.CompletionException;
+
+import lombok.AccessLevel;
+import lombok.NonNull;
+import lombok.Setter;
+
+import org.kohsuke.github.GHIssueState;
+import org.kohsuke.github.GHMilestone;
+import org.kohsuke.github.GHMilestoneState;
+import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GitHub;
+import org.kohsuke.github.GitHubBuilder;
+
+import me.julb.sdk.github.actions.kit.GitHubActionsKit;
+import me.julb.sdk.github.actions.spi.GitHubActionProvider;
+
+/**
+ * The action to manage milestones. &lt;br&gt;
+ * @author Julb.
+ */
+<span class="fc" id="L52">public class ManageMilestoneGitHubAction implements GitHubActionProvider {</span>
+
+    /**
+     * The GitHub action kit.
+     */
+<span class="fc" id="L57">    @Setter(AccessLevel.PACKAGE)</span>
+    private GitHubActionsKit ghActionsKit = GitHubActionsKit.INSTANCE;
+
+    /**
+     * The GitHub API.
+     */
+<span class="fc" id="L63">    @Setter(AccessLevel.PACKAGE)</span>
+    private GitHub ghApi;
+
+    /**
+     * The GitHub repository.
+     */
+<span class="fc" id="L69">    @Setter(AccessLevel.PACKAGE)</span>
+    private GHRepository ghRepository;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void execute() {
+        try {
+            // Get inputs
+<span class="fc" id="L79">            var milestoneTitle = getInputTitle();</span>
+<span class="fc" id="L80">            var milestoneState = getInputState();</span>
+<span class="fc" id="L81">            var milestoneDescription = getInputDescription();</span>
+<span class="fc" id="L82">            var milestoneDueOnDate = getInputDueOn();</span>
+
+            // Trace parameters
+<span class="fc" id="L85">            ghActionsKit.debug(String.format(&quot;parameters: [title: %s, state: %s, description: %s, due_on: %s]&quot;, milestoneTitle, milestoneState.name(), milestoneDescription.orElse(&quot;&quot;), milestoneDueOnDate.map(Date::toString).orElse(&quot;&quot;)));</span>
+
+            // Read GitHub repository.
+<span class="fc" id="L88">            connectApi();</span>
+
+            // Retrieve repository
+<span class="fc" id="L91">            ghRepository = ghApi.getRepository(ghActionsKit.getGitHubRepository());</span>
+
+            // Get milestone
+<span class="fc" id="L94">            var existingGHMilestone = getGHMilestone(milestoneTitle);</span>
+
+            // Creation path.
+<span class="fc bfc" id="L97" title="All 4 branches covered.">            if (InputMilestoneState.OPEN.equals(milestoneState) || InputMilestoneState.CLOSED.equals(milestoneState)) {</span>
+                // Convert input state to GH State
+<span class="fc" id="L99">                var ghMilestoneState = GHMilestoneState.valueOf(milestoneState.name());</span>
+
+                // Create milestone.
+<span class="fc" id="L102">                var ghMilestone = createGHMilestone(milestoneTitle, ghMilestoneState, milestoneDescription, milestoneDueOnDate, existingGHMilestone);</span>
+
+                // Set output.
+<span class="fc" id="L105">                ghActionsKit.setOutput(OutputVars.NUMBER.key(), ghMilestone.getNumber());</span>
+<span class="fc" id="L106">            } else {</span>
+                // Delete milestone if exist
+<span class="fc" id="L108">                deleteGHMilestone(existingGHMilestone);</span>
+
+                // Set empty output.
+<span class="fc" id="L111">                ghActionsKit.setEmptyOutput(OutputVars.NUMBER.key());</span>
+            }
+<span class="fc" id="L113">        } catch (Exception e) {</span>
+<span class="fc" id="L114">            throw new CompletionException(e);</span>
+<span class="fc" id="L115">        }</span>
+<span class="fc" id="L116">    }</span>
+
+    // ------------------------------------------ Utility methods.
+
+    /**
+     * Gets the &quot;title&quot; input.
+     * @return the &quot;title&quot; input.
+     */
+    String getInputTitle() {
+<span class="fc" id="L125">        return ghActionsKit.getRequiredInput(&quot;title&quot;);</span>
+    }
+
+    /**
+     * Gets the &quot;state&quot; input.
+     * @return the &quot;state&quot; input.
+     */
+    InputMilestoneState getInputState() {
+<span class="fc" id="L133">        return ghActionsKit.getEnumInput(&quot;state&quot;, InputMilestoneState.class).orElse(InputMilestoneState.OPEN);</span>
+    }
+
+    /**
+     * Gets the &quot;description&quot; input.
+     * @return the &quot;description&quot; input.
+     */
+    Optional&lt;String&gt; getInputDescription() {
+<span class="fc" id="L141">        return ghActionsKit.getInput(&quot;description&quot;);</span>
+    }
+
+    /**
+     * Gets the &quot;due_on&quot; input.
+     * @return the &quot;due_on&quot; input.
+     */
+    Optional&lt;Date&gt; getInputDueOn() {
+<span class="fc" id="L149">        return ghActionsKit.getInput(&quot;due_on&quot;).map(dateStr -&gt; {</span>
+            try {
+                // GitHub requires the date to be set to 8:00am
+<span class="fc" id="L152">                var instant = Instant.parse(String.format(&quot;%sT08:00:00.000Z&quot;, dateStr));</span>
+<span class="fc" id="L153">                return Date.from(instant);</span>
+<span class="fc" id="L154">            } catch (DateTimeParseException e) {</span>
+<span class="fc" id="L155">                throw new IllegalArgumentException(e);</span>
+            }
+        });
+    }
+
+    /**
+     * Connects to GitHub API.
+     * @throws IOException if an error occurs.
+     */
+    void connectApi()
+        throws IOException {
+<span class="fc" id="L166">        ghActionsKit.debug(&quot;github api url connection: check.&quot;);</span>
+
+        // Get token
+<span class="fc" id="L169">        var githubToken = ghActionsKit.getRequiredEnv(&quot;GITHUB_TOKEN&quot;);</span>
+
+        //@formatter:off
+<span class="fc" id="L172">        ghApi = Optional.ofNullable(ghApi).orElse(new GitHubBuilder()</span>
+<span class="fc" id="L173">            .withEndpoint(ghActionsKit.getGitHubApiUrl())</span>
+<span class="fc" id="L174">            .withOAuthToken(githubToken)</span>
+<span class="fc" id="L175">            .build());</span>
+<span class="fc" id="L176">        ghApi.checkApiUrlValidity();</span>
+<span class="fc" id="L177">        ghActionsKit.debug(&quot;github api url connection: ok.&quot;);</span>
+        //@formatter:on
+<span class="fc" id="L179">    }</span>
+
+    /**
+     * Gets the {@link GHMilestone} milestone matching the given title.
+     * @param title the milestone title to look for.
+     * @return the {@link GHMilestone} for the given title if exists, &lt;code&gt;false&lt;/code&gt; otherwise.
+     * @throws IOException if an error occurs.
+     */
+<span class="fc bfc" id="L187" title="All 2 branches covered.">    Optional&lt;GHMilestone&gt; getGHMilestone(@NonNull String title)</span>
+        throws IOException {
+
+<span class="fc bfc" id="L190" title="All 2 branches covered.">        for (GHMilestone ghMilestone : ghRepository.listMilestones(GHIssueState.ALL)) {</span>
+<span class="fc bfc" id="L191" title="All 2 branches covered.">            if (ghMilestone.getTitle().equalsIgnoreCase(title)) {</span>
+<span class="fc" id="L192">                return Optional.of(ghMilestone);</span>
+            }
+<span class="fc" id="L194">        }</span>
+
+<span class="fc" id="L196">        return Optional.empty();</span>
+    }
+
+    /**
+     * Creates or updates the {@link GHMilestone} if any.
+     * @param title the milestone title.
+     * @param state the milestone state.
+     * @param description the milestone description, or {@link Optional#empty()} if the description is empty.
+     * @param dueOn the milestone due on date, or {@link Optional#empty()} if there is no due date.
+     * @param existingMilestone the existing milestone, or {@link Optional#empty()} if there is no existing milestone.
+     * @return the {@link GHMilestone} created or updated.
+     * @throws IOException if an error occurs.
+     */
+<span class="fc bfc" id="L209" title="All 10 branches covered.">    GHMilestone createGHMilestone(@NonNull String title, @NonNull GHMilestoneState state, @NonNull Optional&lt;String&gt; description, @NonNull Optional&lt;Date&gt; dueOn, @NonNull Optional&lt;GHMilestone&gt; existingMilestone)</span>
+        throws IOException {
+        GHMilestone ghMilestoneManaged;
+
+<span class="fc bfc" id="L213" title="All 2 branches covered.">        if (existingMilestone.isEmpty()) {</span>
+            // The milestone does not exist: create
+<span class="fc" id="L215">            ghActionsKit.notice(&quot;creating the milestone.&quot;);</span>
+<span class="fc" id="L216">            ghMilestoneManaged = ghRepository.createMilestone(title, description.orElse(null));</span>
+        } else {
+            // The milestone already exists: update description
+<span class="fc" id="L219">            ghActionsKit.notice(&quot;updating the milestone&quot;);</span>
+<span class="fc" id="L220">            ghMilestoneManaged = existingMilestone.get();</span>
+        }
+
+        // update description
+<span class="fc bfc" id="L224" title="All 2 branches covered.">        if (description.isPresent()) {</span>
+<span class="fc" id="L225">            ghMilestoneManaged.setDescription(description.get());</span>
+        }
+
+        // update due on
+<span class="fc bfc" id="L229" title="All 2 branches covered.">        if (dueOn.isPresent()) {</span>
+<span class="fc" id="L230">            ghMilestoneManaged.setDueOn(dueOn.get());</span>
+        }
+
+        // update state
+<span class="fc bfc" id="L234" title="All 2 branches covered.">        if (!state.equals(ghMilestoneManaged.getState())) {</span>
+<span class="fc bfc" id="L235" title="All 2 branches covered.">            if (GHMilestoneState.OPEN.equals(state)) {</span>
+<span class="fc" id="L236">                ghActionsKit.notice(&quot;updating the state =&gt; OPEN&quot;);</span>
+<span class="fc" id="L237">                ghMilestoneManaged.reopen();</span>
+            } else {
+<span class="fc" id="L239">                ghActionsKit.notice(&quot;updating the state =&gt; CLOSED&quot;);</span>
+<span class="fc" id="L240">                ghMilestoneManaged.close();</span>
+            }
+        }
+
+<span class="fc" id="L244">        return ghMilestoneManaged;</span>
+    }
+
+    /**
+     * Deletes the {@link GHMilestone} if any.
+     * @param milestoneToDelete the {@link GHMilestone} to delete, or {@link Optional#empty()}.
+     * @throws IOException if an error occurs.
+     */
+<span class="fc bfc" id="L252" title="All 2 branches covered.">    void deleteGHMilestone(@NonNull Optional&lt;GHMilestone&gt; milestoneToDelete)</span>
+        throws IOException {
+        // Check if milestone exists.
+<span class="fc bfc" id="L255" title="All 2 branches covered.">        if (milestoneToDelete.isPresent()) {</span>
+            // The milestone exists: delete.
+<span class="fc" id="L257">            ghActionsKit.notice(&quot;deleting the milestone.&quot;);</span>
+<span class="fc" id="L258">            milestoneToDelete.get().delete();</span>
+        } else {
+            // The milestone does not exist, nothing to do.
+<span class="fc" id="L261">            ghActionsKit.notice(&quot;skipping milestone deletion as it does not exist.&quot;);</span>
+        }
+<span class="fc" id="L263">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>
