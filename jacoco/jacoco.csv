@@ -2,4 +2,4 @@ GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_
 Julb.me :: GitHub action to manage milestones,me.julb,Application,0,5,0,0,0,2,0,1,0,1
 Julb.me :: GitHub action to manage milestones,me.julb.applications.github.actions,OutputVars,0,21,0,0,0,6,0,3,0,3
 Julb.me :: GitHub action to manage milestones,me.julb.applications.github.actions,InputMilestoneState,0,21,0,0,0,4,0,1,0,1
-Julb.me :: GitHub action to manage milestones,me.julb.applications.github.actions,ManageMilestoneGitHubAction,0,353,0,34,0,69,0,31,0,14
+Julb.me :: GitHub action to manage milestones,me.julb.applications.github.actions,ManageMilestoneGitHubAction,0,349,0,34,0,77,0,31,0,14
