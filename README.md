@@ -68,8 +68,8 @@ jobs:
 
 ### Inputs
 
-| Name          | Type   | Default   | Description                                                           |
-| ------------- | ------ | --------- | --------------------------------------------------------------------- |
+|     Name      |  Type  |  Default  |                              Description                              |
+|---------------|--------|-----------|-----------------------------------------------------------------------|
 | `title`       | string | `Not set` | Title of the milestone. **Required**                                  |
 | `state`       | string | `open`    | State of the milestone. Valid values are `open`, `closed`, `deleted`  |
 | `description` | string | `Not set` | Description of the milestone of the milestone.                        |
@@ -77,8 +77,8 @@ jobs:
 
 ### Outputs
 
-| Name     | Type   | Description                                                   |
-| -------- | ------ | ------------------------------------------------------------- |
+|   Name   |  Type  |                          Description                          |
+|----------|--------|---------------------------------------------------------------|
 | `number` | number | ID of the milestone, or ` ` in case the milestone is deleted. |
 
 ## Contributing

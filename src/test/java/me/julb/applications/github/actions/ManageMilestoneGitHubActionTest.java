@@ -21,7 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 package me.julb.applications.github.actions;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -93,8 +92,7 @@ class ManageMilestoneGitHubActionTest {
      * @throws java.lang.Exception
      */
     @BeforeEach
-    void setUp()
-        throws Exception {
+    void setUp() throws Exception {
         githubAction = new ManageMilestoneGitHubAction();
         githubAction.setGhActionsKit(ghActionsKitMock);
         githubAction.setGhApi(ghApiMock);
@@ -105,8 +103,7 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenGetInputTitle_thenReturnValue()
-        throws Exception {
+    void whenGetInputTitle_thenReturnValue() throws Exception {
         when(this.ghActionsKitMock.getRequiredInput("title")).thenReturn("v1.0.0");
 
         assertThat(this.githubAction.getInputTitle()).isEqualTo("v1.0.0");
@@ -128,9 +125,9 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenGetInputStateProvided_thenReturnValue()
-        throws Exception {
-        when(this.ghActionsKitMock.getEnumInput("state", InputMilestoneState.class)).thenReturn(Optional.of(InputMilestoneState.CLOSED));
+    void whenGetInputStateProvided_thenReturnValue() throws Exception {
+        when(this.ghActionsKitMock.getEnumInput("state", InputMilestoneState.class))
+                .thenReturn(Optional.of(InputMilestoneState.CLOSED));
 
         assertThat(this.githubAction.getInputState()).isEqualTo(InputMilestoneState.CLOSED);
 
@@ -141,9 +138,9 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenGetInputStateNotProvided_thenReturnDefaultValue()
-        throws Exception {
-        when(this.ghActionsKitMock.getEnumInput("state", InputMilestoneState.class)).thenReturn(Optional.empty());
+    void whenGetInputStateNotProvided_thenReturnDefaultValue() throws Exception {
+        when(this.ghActionsKitMock.getEnumInput("state", InputMilestoneState.class))
+                .thenReturn(Optional.empty());
 
         assertThat(this.githubAction.getInputState()).isEqualTo(InputMilestoneState.OPEN);
 
@@ -154,8 +151,7 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenGetInputDescriptionPresent_thenReturnValue()
-        throws Exception {
+    void whenGetInputDescriptionPresent_thenReturnValue() throws Exception {
         when(this.ghActionsKitMock.getInput("description")).thenReturn(Optional.of("some description"));
 
         assertThat(this.githubAction.getInputDescription()).isEqualTo(Optional.of("some description"));
@@ -167,8 +163,7 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenGetInputDescriptionEmpty_thenReturnEmpty()
-        throws Exception {
+    void whenGetInputDescriptionEmpty_thenReturnEmpty() throws Exception {
         when(this.ghActionsKitMock.getInput("description")).thenReturn(Optional.empty());
 
         assertThat(this.githubAction.getInputDescription()).isEmpty();
@@ -180,8 +175,7 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenGetInputDueOnPresent_thenReturnValue()
-        throws Exception {
+    void whenGetInputDueOnPresent_thenReturnValue() throws Exception {
         when(this.ghActionsKitMock.getInput("due_on")).thenReturn(Optional.of("2022-01-01"));
 
         // Should return the date set to 8am
@@ -202,8 +196,7 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenGetInputDueOnEmpty_thenReturnEmpty()
-        throws Exception {
+    void whenGetInputDueOnEmpty_thenReturnEmpty() throws Exception {
         when(this.ghActionsKitMock.getInput("due_on")).thenReturn(Optional.empty());
 
         assertThat(this.githubAction.getInputDueOn()).isEmpty();
@@ -215,8 +208,7 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenGetInputDueOnInvalid_thenThrowIllegalArgumentException()
-        throws Exception {
+    void whenGetInputDueOnInvalid_thenThrowIllegalArgumentException() throws Exception {
         when(this.ghActionsKitMock.getInput("due_on")).thenReturn(Optional.of("abcd"));
 
         assertThrows(IllegalArgumentException.class, () -> this.githubAction.getInputDueOn());
@@ -228,8 +220,7 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenExecuteOpenMilestoneExists_thenMilestoneOpened()
-        throws Exception {
+    void whenExecuteOpenMilestoneExists_thenMilestoneOpened() throws Exception {
         var spy = spy(this.githubAction);
 
         var ghMilestoneExisting = Mockito.mock(GHMilestone.class);
@@ -247,7 +238,14 @@ class ManageMilestoneGitHubActionTest {
 
         when(this.ghApiMock.getRepository("octocat/Hello-World")).thenReturn(ghRepositoryMock);
         doReturn(Optional.of(ghMilestoneExisting)).when(spy).getGHMilestone("v1.0.0");
-        doReturn(ghMilestoneExisting).when(spy).createGHMilestone("v1.0.0", GHMilestoneState.OPEN, Optional.of("description"), Optional.of(dueOn), Optional.of(ghMilestoneExisting));
+        doReturn(ghMilestoneExisting)
+                .when(spy)
+                .createGHMilestone(
+                        "v1.0.0",
+                        GHMilestoneState.OPEN,
+                        Optional.of("description"),
+                        Optional.of(dueOn),
+                        Optional.of(ghMilestoneExisting));
 
         spy.execute();
 
@@ -259,7 +257,13 @@ class ManageMilestoneGitHubActionTest {
         verify(spy).getInputDueOn();
         verify(spy).connectApi();
         verify(spy).getGHMilestone("v1.0.0");
-        verify(spy).createGHMilestone("v1.0.0", GHMilestoneState.OPEN, Optional.of("description"), Optional.of(dueOn), Optional.of(ghMilestoneExisting));
+        verify(spy)
+                .createGHMilestone(
+                        "v1.0.0",
+                        GHMilestoneState.OPEN,
+                        Optional.of("description"),
+                        Optional.of(dueOn),
+                        Optional.of(ghMilestoneExisting));
 
         verify(this.ghApiMock).getRepository("octocat/Hello-World");
         verify(this.ghActionsKitMock).setOutput(OutputVars.NUMBER.key(), 123);
@@ -269,8 +273,7 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenExecuteOpenMilestoneNotExists_thenMilestoneOpened()
-        throws Exception {
+    void whenExecuteOpenMilestoneNotExists_thenMilestoneOpened() throws Exception {
         var spy = spy(this.githubAction);
 
         var ghMilestoneCreated = Mockito.mock(GHMilestone.class);
@@ -288,7 +291,14 @@ class ManageMilestoneGitHubActionTest {
 
         when(this.ghApiMock.getRepository("octocat/Hello-World")).thenReturn(ghRepositoryMock);
         doReturn(Optional.empty()).when(spy).getGHMilestone("v1.0.0");
-        doReturn(ghMilestoneCreated).when(spy).createGHMilestone("v1.0.0", GHMilestoneState.OPEN, Optional.of("description"), Optional.of(dueOn), Optional.empty());
+        doReturn(ghMilestoneCreated)
+                .when(spy)
+                .createGHMilestone(
+                        "v1.0.0",
+                        GHMilestoneState.OPEN,
+                        Optional.of("description"),
+                        Optional.of(dueOn),
+                        Optional.empty());
 
         spy.execute();
 
@@ -300,7 +310,13 @@ class ManageMilestoneGitHubActionTest {
         verify(spy).getInputDueOn();
         verify(spy).connectApi();
         verify(spy).getGHMilestone("v1.0.0");
-        verify(spy).createGHMilestone("v1.0.0", GHMilestoneState.OPEN, Optional.of("description"), Optional.of(dueOn), Optional.empty());
+        verify(spy)
+                .createGHMilestone(
+                        "v1.0.0",
+                        GHMilestoneState.OPEN,
+                        Optional.of("description"),
+                        Optional.of(dueOn),
+                        Optional.empty());
 
         verify(this.ghApiMock).getRepository("octocat/Hello-World");
         verify(this.ghActionsKitMock).setOutput(OutputVars.NUMBER.key(), 123);
@@ -310,8 +326,7 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenExecuteCloseMilestoneExists_thenMilestoneClosed()
-        throws Exception {
+    void whenExecuteCloseMilestoneExists_thenMilestoneClosed() throws Exception {
         var spy = spy(this.githubAction);
 
         var ghMilestoneExisting = Mockito.mock(GHMilestone.class);
@@ -327,7 +342,14 @@ class ManageMilestoneGitHubActionTest {
 
         when(this.ghApiMock.getRepository("octocat/Hello-World")).thenReturn(ghRepositoryMock);
         doReturn(Optional.of(ghMilestoneExisting)).when(spy).getGHMilestone("v1.0.0");
-        doReturn(ghMilestoneExisting).when(spy).createGHMilestone("v1.0.0", GHMilestoneState.CLOSED, Optional.empty(), Optional.empty(), Optional.of(ghMilestoneExisting));
+        doReturn(ghMilestoneExisting)
+                .when(spy)
+                .createGHMilestone(
+                        "v1.0.0",
+                        GHMilestoneState.CLOSED,
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(ghMilestoneExisting));
 
         spy.execute();
 
@@ -339,7 +361,13 @@ class ManageMilestoneGitHubActionTest {
         verify(spy).getInputDueOn();
         verify(spy).connectApi();
         verify(spy).getGHMilestone("v1.0.0");
-        verify(spy).createGHMilestone("v1.0.0", GHMilestoneState.CLOSED, Optional.empty(), Optional.empty(), Optional.of(ghMilestoneExisting));
+        verify(spy)
+                .createGHMilestone(
+                        "v1.0.0",
+                        GHMilestoneState.CLOSED,
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(ghMilestoneExisting));
 
         verify(this.ghApiMock).getRepository("octocat/Hello-World");
         verify(this.ghActionsKitMock).setOutput(OutputVars.NUMBER.key(), 123);
@@ -349,8 +377,7 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenExecuteCloseMilestoneNotExists_thenMilestoneClosed()
-        throws Exception {
+    void whenExecuteCloseMilestoneNotExists_thenMilestoneClosed() throws Exception {
         var spy = spy(this.githubAction);
 
         var ghMilestoneCreated = Mockito.mock(GHMilestone.class);
@@ -366,7 +393,10 @@ class ManageMilestoneGitHubActionTest {
 
         when(this.ghApiMock.getRepository("octocat/Hello-World")).thenReturn(ghRepositoryMock);
         doReturn(Optional.empty()).when(spy).getGHMilestone("v1.0.0");
-        doReturn(ghMilestoneCreated).when(spy).createGHMilestone("v1.0.0", GHMilestoneState.CLOSED, Optional.empty(), Optional.empty(), Optional.empty());
+        doReturn(ghMilestoneCreated)
+                .when(spy)
+                .createGHMilestone(
+                        "v1.0.0", GHMilestoneState.CLOSED, Optional.empty(), Optional.empty(), Optional.empty());
 
         spy.execute();
 
@@ -378,7 +408,9 @@ class ManageMilestoneGitHubActionTest {
         verify(spy).getInputDueOn();
         verify(spy).connectApi();
         verify(spy).getGHMilestone("v1.0.0");
-        verify(spy).createGHMilestone("v1.0.0", GHMilestoneState.CLOSED, Optional.empty(), Optional.empty(), Optional.empty());
+        verify(spy)
+                .createGHMilestone(
+                        "v1.0.0", GHMilestoneState.CLOSED, Optional.empty(), Optional.empty(), Optional.empty());
 
         verify(this.ghApiMock).getRepository("octocat/Hello-World");
         verify(this.ghActionsKitMock).setOutput(OutputVars.NUMBER.key(), 123);
@@ -388,8 +420,7 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenExecuteDeleteMilestoneExists_thenMilestoneDeleted()
-        throws Exception {
+    void whenExecuteDeleteMilestoneExists_thenMilestoneDeleted() throws Exception {
         var spy = spy(this.githubAction);
 
         var ghMilestoneExisting = Mockito.mock(GHMilestone.class);
@@ -426,8 +457,7 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenExecuteDeleteMilestoneNotExists_thenMilestoneDeleted()
-        throws Exception {
+    void whenExecuteDeleteMilestoneNotExists_thenMilestoneDeleted() throws Exception {
         var spy = spy(this.githubAction);
 
         when(this.ghActionsKitMock.getGitHubRepository()).thenReturn("octocat/Hello-World");
@@ -462,8 +492,7 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenConnectApi_thenVerifyOK()
-        throws Exception {
+    void whenConnectApi_thenVerifyOK() throws Exception {
         when(ghActionsKitMock.getRequiredEnv("GITHUB_TOKEN")).thenReturn("token");
         when(ghActionsKitMock.getGitHubApiUrl()).thenReturn("https://api.github.com");
 
@@ -479,15 +508,15 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenGetGHMilestoneExist_thenReturnRef()
-        throws Exception {
+    void whenGetGHMilestoneExist_thenReturnRef() throws Exception {
         var ghMilestone1 = Mockito.mock(GHMilestone.class);
         when(ghMilestone1.getTitle()).thenReturn("v0.0.0");
 
         var ghMilestone2 = Mockito.mock(GHMilestone.class);
         when(ghMilestone2.getTitle()).thenReturn("v1.0.0");
 
-        when(ghRepositoryMock.listMilestones(GHIssueState.ALL)).thenReturn(new LocalPagedIterable<>(List.of(ghMilestone1, ghMilestone2)));
+        when(ghRepositoryMock.listMilestones(GHIssueState.ALL))
+                .thenReturn(new LocalPagedIterable<>(List.of(ghMilestone1, ghMilestone2)));
 
         assertThat(this.githubAction.getGHMilestone("v1.0.0")).isPresent().contains(ghMilestone2);
 
@@ -500,8 +529,7 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenGetGHMilestoneDoesNotExist_thenReturnEmpty()
-        throws Exception {
+    void whenGetGHMilestoneDoesNotExist_thenReturnEmpty() throws Exception {
         when(ghRepositoryMock.listMilestones(GHIssueState.ALL)).thenReturn(new LocalPagedIterable<>(List.of()));
 
         assertThat(this.githubAction.getGHMilestone("v1.0.0")).isEmpty();
@@ -513,8 +541,7 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenGetGHMilestoneNull_thenThrowNullPointerException()
-        throws Exception {
+    void whenGetGHMilestoneNull_thenThrowNullPointerException() throws Exception {
         assertThrows(NullPointerException.class, () -> this.githubAction.getGHMilestone(null));
     }
 
@@ -522,13 +549,13 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenCreateGHMilestoneOpenEmptyMilestone_thenOpenMilestone()
-        throws Exception {
+    void whenCreateGHMilestoneOpenEmptyMilestone_thenOpenMilestone() throws Exception {
         var ghMilestoneMock = mock(GHMilestone.class);
         when(ghRepositoryMock.createMilestone("v1.0.0", null)).thenReturn(ghMilestoneMock);
         when(ghMilestoneMock.getState()).thenReturn(GHMilestoneState.OPEN);
 
-        this.githubAction.createGHMilestone("v1.0.0", GHMilestoneState.OPEN, Optional.empty(), Optional.empty(), Optional.empty());
+        this.githubAction.createGHMilestone(
+                "v1.0.0", GHMilestoneState.OPEN, Optional.empty(), Optional.empty(), Optional.empty());
 
         verify(ghActionsKitMock).notice(Mockito.anyString());
         verify(ghRepositoryMock).createMilestone("v1.0.0", null);
@@ -540,14 +567,18 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenCreateGHMilestoneOpenExistingOpenMilestone_thenOpenMilestone()
-        throws Exception {
+    void whenCreateGHMilestoneOpenExistingOpenMilestone_thenOpenMilestone() throws Exception {
         var ghMilestoneMock = mock(GHMilestone.class);
         when(ghMilestoneMock.getState()).thenReturn(GHMilestoneState.OPEN);
 
         var dueOn = new Date();
 
-        this.githubAction.createGHMilestone("v1.0.0", GHMilestoneState.OPEN, Optional.of("description"), Optional.of(dueOn), Optional.of(ghMilestoneMock));
+        this.githubAction.createGHMilestone(
+                "v1.0.0",
+                GHMilestoneState.OPEN,
+                Optional.of("description"),
+                Optional.of(dueOn),
+                Optional.of(ghMilestoneMock));
 
         verify(ghActionsKitMock).notice(Mockito.anyString());
         verify(ghMilestoneMock).setDueOn(dueOn);
@@ -560,14 +591,18 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenCreateGHMilestoneCloseExistingOpenMilestone_thenCloseMilestone()
-        throws Exception {
+    void whenCreateGHMilestoneCloseExistingOpenMilestone_thenCloseMilestone() throws Exception {
         var ghMilestoneMock = mock(GHMilestone.class);
         when(ghMilestoneMock.getState()).thenReturn(GHMilestoneState.OPEN);
 
         var dueOn = new Date();
 
-        this.githubAction.createGHMilestone("v1.0.0", GHMilestoneState.CLOSED, Optional.of("description"), Optional.of(dueOn), Optional.of(ghMilestoneMock));
+        this.githubAction.createGHMilestone(
+                "v1.0.0",
+                GHMilestoneState.CLOSED,
+                Optional.of("description"),
+                Optional.of(dueOn),
+                Optional.of(ghMilestoneMock));
 
         verify(ghActionsKitMock, times(2)).notice(Mockito.anyString());
         verify(ghMilestoneMock).setDueOn(dueOn);
@@ -580,14 +615,18 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenCreateGHMilestoneOpenExistingClosedMilestone_thenOpenMilestone()
-        throws Exception {
+    void whenCreateGHMilestoneOpenExistingClosedMilestone_thenOpenMilestone() throws Exception {
         var ghMilestoneMock = mock(GHMilestone.class);
         when(ghMilestoneMock.getState()).thenReturn(GHMilestoneState.CLOSED);
 
         var dueOn = new Date();
 
-        this.githubAction.createGHMilestone("v1.0.0", GHMilestoneState.OPEN, Optional.of("description"), Optional.of(dueOn), Optional.of(ghMilestoneMock));
+        this.githubAction.createGHMilestone(
+                "v1.0.0",
+                GHMilestoneState.OPEN,
+                Optional.of("description"),
+                Optional.of(dueOn),
+                Optional.of(ghMilestoneMock));
 
         verify(ghActionsKitMock, times(2)).notice(Mockito.anyString());
         verify(ghMilestoneMock).setDueOn(dueOn);
@@ -600,14 +639,18 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenCreateGHMilestoneCloseExistingClosedMilestone_thenCloseMilestone()
-        throws Exception {
+    void whenCreateGHMilestoneCloseExistingClosedMilestone_thenCloseMilestone() throws Exception {
         var ghMilestoneMock = mock(GHMilestone.class);
         when(ghMilestoneMock.getState()).thenReturn(GHMilestoneState.CLOSED);
 
         var dueOn = new Date();
 
-        this.githubAction.createGHMilestone("v1.0.0", GHMilestoneState.CLOSED, Optional.of("description"), Optional.of(dueOn), Optional.of(ghMilestoneMock));
+        this.githubAction.createGHMilestone(
+                "v1.0.0",
+                GHMilestoneState.CLOSED,
+                Optional.of("description"),
+                Optional.of(dueOn),
+                Optional.of(ghMilestoneMock));
 
         verify(ghActionsKitMock).notice(Mockito.anyString());
         verify(ghMilestoneMock).setDueOn(dueOn);
@@ -620,24 +663,37 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenCreateGHMilestoneNull_thenThrowNullPointerException()
-        throws Exception {
-        var emptyStringOptional = Optional.<String> empty();
-        var emptyDateOptional = Optional.<Date> empty();
-        var emptyMilestoneOptional = Optional.<GHMilestone> empty();
-        assertThrows(NullPointerException.class, () -> this.githubAction.createGHMilestone(null, GHMilestoneState.OPEN, emptyStringOptional, emptyDateOptional, emptyMilestoneOptional));
-        assertThrows(NullPointerException.class, () -> this.githubAction.createGHMilestone("v1.0.0", null, emptyStringOptional, emptyDateOptional, emptyMilestoneOptional));
-        assertThrows(NullPointerException.class, () -> this.githubAction.createGHMilestone("v1.0.0", GHMilestoneState.OPEN, null, emptyDateOptional, emptyMilestoneOptional));
-        assertThrows(NullPointerException.class, () -> this.githubAction.createGHMilestone("v1.0.0", GHMilestoneState.OPEN, emptyStringOptional, null, emptyMilestoneOptional));
-        assertThrows(NullPointerException.class, () -> this.githubAction.createGHMilestone("v1.0.0", GHMilestoneState.OPEN, emptyStringOptional, emptyDateOptional, null));
+    void whenCreateGHMilestoneNull_thenThrowNullPointerException() throws Exception {
+        var emptyStringOptional = Optional.<String>empty();
+        var emptyDateOptional = Optional.<Date>empty();
+        var emptyMilestoneOptional = Optional.<GHMilestone>empty();
+        assertThrows(
+                NullPointerException.class,
+                () -> this.githubAction.createGHMilestone(
+                        null, GHMilestoneState.OPEN, emptyStringOptional, emptyDateOptional, emptyMilestoneOptional));
+        assertThrows(
+                NullPointerException.class,
+                () -> this.githubAction.createGHMilestone(
+                        "v1.0.0", null, emptyStringOptional, emptyDateOptional, emptyMilestoneOptional));
+        assertThrows(
+                NullPointerException.class,
+                () -> this.githubAction.createGHMilestone(
+                        "v1.0.0", GHMilestoneState.OPEN, null, emptyDateOptional, emptyMilestoneOptional));
+        assertThrows(
+                NullPointerException.class,
+                () -> this.githubAction.createGHMilestone(
+                        "v1.0.0", GHMilestoneState.OPEN, emptyStringOptional, null, emptyMilestoneOptional));
+        assertThrows(
+                NullPointerException.class,
+                () -> this.githubAction.createGHMilestone(
+                        "v1.0.0", GHMilestoneState.OPEN, emptyStringOptional, emptyDateOptional, null));
     }
 
     /**
      * Test method.
      */
     @Test
-    void whenDeleteGHMilestonePresent_thenDeleteGhMilestone()
-        throws Exception {
+    void whenDeleteGHMilestonePresent_thenDeleteGhMilestone() throws Exception {
         var ghMilestone = Mockito.mock(GHMilestone.class);
 
         assertDoesNotThrow(() -> {
@@ -664,8 +720,7 @@ class ManageMilestoneGitHubActionTest {
      * Test method.
      */
     @Test
-    void whenDeleteGHMilestoneNull_thenThrowNullPointerException()
-        throws Exception {
+    void whenDeleteGHMilestoneNull_thenThrowNullPointerException() throws Exception {
         assertThrows(NullPointerException.class, () -> this.githubAction.deleteGHMilestone(null));
     }
 }

@@ -21,7 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 package me.julb.applications.github.actions;
 
 import java.io.IOException;
@@ -30,10 +29,6 @@ import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
-
-import lombok.AccessLevel;
-import lombok.NonNull;
-import lombok.Setter;
 
 import org.kohsuke.github.GHIssueState;
 import org.kohsuke.github.GHMilestone;
@@ -44,6 +39,10 @@ import org.kohsuke.github.GitHubBuilder;
 
 import me.julb.sdk.github.actions.kit.GitHubActionsKit;
 import me.julb.sdk.github.actions.spi.GitHubActionProvider;
+
+import lombok.AccessLevel;
+import lombok.NonNull;
+import lombok.Setter;
 
 /**
  * The action to manage milestones. <br>
@@ -82,7 +81,12 @@ public class ManageMilestoneGitHubAction implements GitHubActionProvider {
             var milestoneDueOnDate = getInputDueOn();
 
             // Trace parameters
-            ghActionsKit.debug(String.format("parameters: [title: %s, state: %s, description: %s, due_on: %s]", milestoneTitle, milestoneState.name(), milestoneDescription.orElse(""), milestoneDueOnDate.map(Date::toString).orElse("")));
+            ghActionsKit.debug(String.format(
+                    "parameters: [title: %s, state: %s, description: %s, due_on: %s]",
+                    milestoneTitle,
+                    milestoneState.name(),
+                    milestoneDescription.orElse(""),
+                    milestoneDueOnDate.map(Date::toString).orElse("")));
 
             // Read GitHub repository.
             connectApi();
@@ -99,7 +103,12 @@ public class ManageMilestoneGitHubAction implements GitHubActionProvider {
                 var ghMilestoneState = GHMilestoneState.valueOf(milestoneState.name());
 
                 // Create milestone.
-                var ghMilestone = createGHMilestone(milestoneTitle, ghMilestoneState, milestoneDescription, milestoneDueOnDate, existingGHMilestone);
+                var ghMilestone = createGHMilestone(
+                        milestoneTitle,
+                        ghMilestoneState,
+                        milestoneDescription,
+                        milestoneDueOnDate,
+                        existingGHMilestone);
 
                 // Set output.
                 ghActionsKit.setOutput(OutputVars.NUMBER.key(), ghMilestone.getNumber());
@@ -161,21 +170,21 @@ public class ManageMilestoneGitHubAction implements GitHubActionProvider {
      * Connects to GitHub API.
      * @throws IOException if an error occurs.
      */
-    void connectApi()
-        throws IOException {
+    void connectApi() throws IOException {
         ghActionsKit.debug("github api url connection: check.");
 
         // Get token
         var githubToken = ghActionsKit.getRequiredEnv("GITHUB_TOKEN");
 
-        //@formatter:off
-        ghApi = Optional.ofNullable(ghApi).orElse(new GitHubBuilder()
-            .withEndpoint(ghActionsKit.getGitHubApiUrl())
-            .withOAuthToken(githubToken)
-            .build());
+        // @formatter:off
+        ghApi = Optional.ofNullable(ghApi)
+                .orElse(new GitHubBuilder()
+                        .withEndpoint(ghActionsKit.getGitHubApiUrl())
+                        .withOAuthToken(githubToken)
+                        .build());
         ghApi.checkApiUrlValidity();
         ghActionsKit.debug("github api url connection: ok.");
-        //@formatter:on
+        // @formatter:on
     }
 
     /**
@@ -184,8 +193,7 @@ public class ManageMilestoneGitHubAction implements GitHubActionProvider {
      * @return the {@link GHMilestone} for the given title if exists, <code>false</code> otherwise.
      * @throws IOException if an error occurs.
      */
-    Optional<GHMilestone> getGHMilestone(@NonNull String title)
-        throws IOException {
+    Optional<GHMilestone> getGHMilestone(@NonNull String title) throws IOException {
 
         for (GHMilestone ghMilestone : ghRepository.listMilestones(GHIssueState.ALL)) {
             if (ghMilestone.getTitle().equalsIgnoreCase(title)) {
@@ -206,8 +214,13 @@ public class ManageMilestoneGitHubAction implements GitHubActionProvider {
      * @return the {@link GHMilestone} created or updated.
      * @throws IOException if an error occurs.
      */
-    GHMilestone createGHMilestone(@NonNull String title, @NonNull GHMilestoneState state, @NonNull Optional<String> description, @NonNull Optional<Date> dueOn, @NonNull Optional<GHMilestone> existingMilestone)
-        throws IOException {
+    GHMilestone createGHMilestone(
+            @NonNull String title,
+            @NonNull GHMilestoneState state,
+            @NonNull Optional<String> description,
+            @NonNull Optional<Date> dueOn,
+            @NonNull Optional<GHMilestone> existingMilestone)
+            throws IOException {
         GHMilestone ghMilestoneManaged;
 
         if (existingMilestone.isEmpty()) {
@@ -249,8 +262,7 @@ public class ManageMilestoneGitHubAction implements GitHubActionProvider {
      * @param milestoneToDelete the {@link GHMilestone} to delete, or {@link Optional#empty()}.
      * @throws IOException if an error occurs.
      */
-    void deleteGHMilestone(@NonNull Optional<GHMilestone> milestoneToDelete)
-        throws IOException {
+    void deleteGHMilestone(@NonNull Optional<GHMilestone> milestoneToDelete) throws IOException {
         // Check if milestone exists.
         if (milestoneToDelete.isPresent()) {
             // The milestone exists: delete.
