@@ -98,7 +98,7 @@ public class ManageMilestoneGitHubAction implements GitHubActionProvider {
             var existingGHMilestone = getGHMilestone(milestoneTitle);
 
             // Creation path.
-            if (InputMilestoneState.OPEN.equals(milestoneState) || InputMilestoneState.CLOSED.equals(milestoneState)) {
+            if (milestoneState == InputMilestoneState.OPEN || milestoneState == InputMilestoneState.CLOSED) {
                 // Convert input state to GH State
                 var ghMilestoneState = GHMilestoneState.valueOf(milestoneState.name());
 
@@ -155,7 +155,7 @@ public class ManageMilestoneGitHubAction implements GitHubActionProvider {
      * @return the "due_on" input.
      */
     Optional<Date> getInputDueOn() {
-        return ghActionsKit.getInput("due_on").map(dateStr -> {
+        return ghActionsKit.getInput("due_on").map((String dateStr) -> {
             try {
                 // GitHub requires the date to be set to 8:00am
                 var instant = Instant.parse(String.format("%sT08:00:00.000Z", dateStr));
@@ -244,8 +244,8 @@ public class ManageMilestoneGitHubAction implements GitHubActionProvider {
         }
 
         // update state
-        if (!state.equals(ghMilestoneManaged.getState())) {
-            if (GHMilestoneState.OPEN.equals(state)) {
+        if (state != ghMilestoneManaged.getState()) {
+            if (state == GHMilestoneState.OPEN) {
                 ghActionsKit.notice("updating the state => OPEN");
                 ghMilestoneManaged.reopen();
             } else {
